@@ -36,17 +36,35 @@ export default function DashboardPage() {
         const text = await response.text();
         console.log('Response text:', text);
         
-        if (text) {
-          const data = JSON.parse(text);
-          console.log('Parsed data:', data);
-          console.log('Users array length:', data.users?.length || 0);
-          setPendingUsers(data.users?.length || 0);
+        if (text && text.trim()) {
+          try {
+            const data = JSON.parse(text);
+            console.log('Parsed data:', data);
+            console.log('Users array length:', data.users?.length || 0);
+            setPendingUsers(data.users?.length || 0);
+          } catch (parseError) {
+            console.error('JSON parse error:', parseError);
+            console.error('Response text that failed to parse:', text);
+            setPendingUsers(0);
+          }
+        } else {
+          console.log('Empty response text');
+          setPendingUsers(0);
         }
       } else {
         console.error('Failed to fetch pending users:', response.status, response.statusText);
+        // Try to read the error response
+        try {
+          const errorText = await response.text();
+          console.error('Error response:', errorText);
+        } catch (e) {
+          console.error('Could not read error response:', e);
+        }
+        setPendingUsers(0);
       }
     } catch (error) {
       console.error('Error fetching pending users:', error);
+      setPendingUsers(0);
     }
   };
 

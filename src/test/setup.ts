@@ -160,5 +160,7 @@ vi.mock('lucide-react', () => {
     EyeOff: MockIcon,
     GraduationCap: MockIcon,
     Download: MockIcon,
+    Bell: MockIcon,
+    UserCheck: MockIcon,
   }
 })
