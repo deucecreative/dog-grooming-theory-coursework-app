@@ -1,0 +1,51 @@
+#!/usr/bin/env sh
+. "$(dirname -- "$0")/_/husky.sh"
+
+echo "🧪 Running pre-commit test quality checks..."
+
+# 1. Check for .only or .skip in staged test files
+echo "📋 Checking for focused tests (.only/.skip)..."
+if git diff --cached --name-only | grep -E '\.test\.(ts|tsx)$' | xargs grep -l '\.only\|\.skip' 2>/dev/null; then
+  echo "❌ Found .only or .skip in test files. Please remove before committing."
+  echo "   Focused tests should not be committed to prevent accidentally skipping tests."
+  exit 1
+fi
+
+# 2. Check for console.log assertions in test files
+echo "📋 Checking for console.log assertions..."
+if git diff --cached --name-only | grep -E '\.test\.(ts|tsx)$' | xargs grep -l 'console\.log.*expect\|expect.*console\.log' 2>/dev/null; then
+  echo "❌ Found console.log used as assertions. Use proper expect() statements."
+  exit 1
+fi
+
+# 3. Validate test naming conventions
+echo "📋 Validating test naming conventions..."
+staged_tests=$(git diff --cached --name-only | grep -E '\.test\.(ts|tsx)$')
+if [ -n "$staged_tests" ]; then
+  # Check for tests that don't follow 'should' pattern
+  bad_names=$(echo "$staged_tests" | xargs grep -n "it(['\"][^s]" 2>/dev/null | grep -v "should" | head -5)
+  if [ -n "$bad_names" ]; then
+    echo "⚠️  Found test names that don't follow 'should [behavior] when [condition]' pattern:"
+    echo "$bad_names"
+    echo "   Consider improving test names for clarity."
+    # Warning only, don't fail commit
+  fi
+fi
+
+# 4. Run tests on staged files
+echo "🧪 Running tests..."
+npm run test:unit -- --run --silent
+if [ $? -ne 0 ]; then
+  echo "❌ Tests failed. Please fix failing tests before committing."
+  exit 1
+fi
+
+# 5. Check coverage on critical paths
+echo "📊 Checking test coverage..."
+npm run test:unit -- --coverage --silent > /dev/null 2>&1
+if [ $? -ne 0 ]; then
+  echo "⚠️  Coverage check failed. Please ensure adequate test coverage."
+  # Warning only for coverage
+fi
+
+echo "✅ All pre-commit checks passed!"

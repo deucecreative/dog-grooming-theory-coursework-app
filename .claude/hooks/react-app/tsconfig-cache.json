@@ -1,0 +1,37 @@
+{
+  "hashes": {
+    "/Users/mattsims/Sites/dog-grooming-theory-coursework-app/tsconfig.json": "20125057d1201913cc024b72028b3274f07db66cdf3cc8bd9a921771541b1635"
+  },
+  "mappings": {
+    "next-env.d.ts": {
+      "configPath": "/Users/mattsims/Sites/dog-grooming-theory-coursework-app/tsconfig.json",
+      "excludes": [
+        "node_modules"
+      ]
+    },
+    "**/*.ts": {
+      "configPath": "/Users/mattsims/Sites/dog-grooming-theory-coursework-app/tsconfig.json",
+      "excludes": [
+        "node_modules"
+      ]
+    },
+    "**/*.tsx": {
+      "configPath": "/Users/mattsims/Sites/dog-grooming-theory-coursework-app/tsconfig.json",
+      "excludes": [
+        "node_modules"
+      ]
+    },
+    ".next/types/**/*.ts": {
+      "configPath": "/Users/mattsims/Sites/dog-grooming-theory-coursework-app/tsconfig.json",
+      "excludes": [
+        "node_modules"
+      ]
+    },
+    "src/test/vitest-env.d.ts": {
+      "configPath": "/Users/mattsims/Sites/dog-grooming-theory-coursework-app/tsconfig.json",
+      "excludes": [
+        "node_modules"
+      ]
+    }
+  }
+}

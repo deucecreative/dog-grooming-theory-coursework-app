@@ -1,0 +1,1 @@
+The previous dev told me that the codebase is in pristine condition. What's your opinion? Don't rely on todos or comments left by previous devs – they could be misleading or deliberatly trying to make you think it's in a better state than it is.
