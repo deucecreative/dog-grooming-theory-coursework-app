@@ -1,4 +1,5 @@
 # Non-negotiables
-– Always follow DRY principles and TDD.
-- ALWAYS run the full test suite after any significant code changes, on task completion, and certainly before any Git commit. This should include E2E/Integration tests, even if it means starting dev servers to complete.
-- Git commits should NEVER be made when there are failing tests, or linter/TypeScript errors or warnings.
+- Always follow DRY principles and TDD.
+- ALWAYS run the full test suite (`npm test -- --run`) after any file modification, on task completion, and certainly before any Git commit. This includes E2E/Integration tests, even if it means starting dev servers.
+- Git commits, or any further development, should NEVER be made when there are failing tests, or linter/TypeScript errors or warnings.
+- PROJECT.md must be updated BEFORE starting any new task and IMMEDIATELY after completing any milestone, so that another dev can confidently take over at short notice.

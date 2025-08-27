@@ -113,13 +113,200 @@ dog-grooming-theory-coursework-app/
 - [x] Database migration consolidation (clean schema for new installs)
 - [x] Invitation-based registration system (security fix)
 - [x] Database & API layer with TDD ✅ **COMPLETED** 
-- [ ] **Phase 3 Step 2**: Student Interface Implementation (⚡ NEXT TASK)
-  - [ ] Connect Questions page to Questions API
-  - [ ] Connect Assignments page to Assignments API  
-  - [ ] Connect Dashboard to real submission data
-  - [ ] Implement question answering interface (3 question types)
-  - [ ] Add auto-save functionality with draft persistence
-  - [ ] Progress tracking and submission flow
+- [ ] **Phase 3 Step 2**: Student Interface Implementation ⚡ IN PROGRESS
+
+#### **Current Status**: Planning Phase (Updated: 2025-08-27)
+- [ ] Questions page API integration  
+- [ ] Dashboard real data integration
+- [ ] Assignment page with question answering
+- [ ] Auto-save functionality
+- [ ] Navigation integration
+
+#### **Available APIs (Ready to Use):**
+
+**Questions API** (`/api/questions`)
+- **GET**: Returns `{ questions: Question[], total: number, page: number, limit: number }`
+- **Supports filtering**: `?category=X&difficulty=Y&type=Z&page=N&limit=N`
+- **Authentication**: Required, all users can read
+- **Question Types**: `multiple_choice`, `short_text`, `long_text`
+- **Difficulty Levels**: `beginner`, `intermediate`, `advanced`
+
+**Assignments API** (`/api/assignments`)  
+- **GET**: Returns `{ assignments: Assignment[], total: number, page: number, limit: number }`
+- **Supports question expansion**: `?expand=questions` (includes full question data)
+- **Authentication**: Required, students see all assignments, course leaders see all
+- **Data Structure**: `{ id, title, description, question_ids[], due_date, course_id, created_by }`
+
+**Submissions API** (`/api/submissions`)
+- **GET**: Students see only their submissions, course leaders see all
+- **POST**: Create/update with upsert functionality (prevents duplicates)
+- **Draft Support**: `status: 'draft'` for auto-save, `status: 'submitted'` for final submission
+- **Data Structure**: `{ id, assignment_id, student_id, answers: JSON, status, submitted_at }`
+
+#### **API Integration Pattern (Follow This Proven Pattern):**
+```typescript
+// From admin/invitations/page.tsx - tested and working
+const fetchData = useCallback(async () => {
+  try {
+    const response = await fetch('/api/endpoint')
+    if (!response.ok) throw new Error('Failed to fetch')
+    const data = await response.json()
+    setData(data.items || [])
+  } catch (error) {
+    console.error('Error:', error)
+    toast({ 
+      title: 'Error', 
+      description: 'Failed to load data', 
+      variant: 'destructive' 
+    })
+  }
+}, [toast])
+
+useEffect(() => {
+  if (profile) {
+    fetchData()
+  }
+}, [profile, fetchData])
+```
+
+#### **Component Architecture Plan:**
+
+**New Components to Build:**
+- **QuestionCard** - Display individual questions with type-specific formatting
+- **QuestionFilter** - Category/difficulty/type filtering with real-time updates
+- **AssignmentCard** - Display assignment with progress and due date status
+- **QuestionAnswer** - Handle 3 question types:
+  - `MultipleChoiceAnswer` - Radio button selection
+  - `ShortTextAnswer` - Single line text input
+  - `LongTextAnswer` - Textarea with character count
+- **AutoSaveIndicator** - Show draft save status and timestamp
+- **SubmissionSummary** - Assignment completion status and score display
+
+#### **TDD Testing Strategy:**
+
+**Test Files to Create (TESTS WRITTEN FIRST):**
+- `src/app/dashboard/questions/__tests__/page.test.tsx`
+- `src/app/dashboard/assignments/__tests__/page.test.tsx`
+- `src/components/student/__tests__/question-card.test.tsx`
+- `src/components/student/__tests__/question-answer.test.tsx`
+- `src/components/student/__tests__/assignment-card.test.tsx`
+- `src/components/student/__tests__/auto-save-indicator.test.tsx`
+- `src/app/__tests__/e2e/student-workflow-e2e.test.ts`
+
+**Testing Pattern to Follow:**
+```typescript
+describe('Feature Component', () => {
+  it('should_behavior_when_condition', async () => {
+    // Arrange - Set up test data and mocks
+    // Act - Execute the feature (user interaction, API call, etc.)
+    // Assert - Verify expected behavior and side effects
+  })
+  
+  it('should_handle_error_states_gracefully', async () => {
+    // Test error scenarios - network failures, validation errors
+  })
+  
+  it('should_display_loading_states_during_async_operations', async () => {
+    // Test loading UI and user feedback
+  })
+})
+```
+
+**Integration Testing Requirements:**
+- Real API calls to verify data compatibility
+- Authentication state handling
+- Error boundary testing for network failures
+- Auto-save functionality with actual API calls
+
+#### **Implementation Tasks (TDD Approach):**
+
+**Task 1: Questions Page Implementation**
+- **RED Phase**: Write failing tests for question browsing, filtering, display
+- **GREEN Phase**: Implement minimal API integration and UI
+- **REFACTOR Phase**: Add filtering, pagination, improved UI
+
+**Task 2: Dashboard Real Data Integration**  
+- **RED Phase**: Write tests for real statistics vs mock data
+- **GREEN Phase**: Replace hardcoded values with API calls
+- **REFACTOR Phase**: Add caching, error handling, loading states
+
+**Task 3: Assignment Page with Question Answering**
+- **RED Phase**: Write tests for 3 question types, auto-save, submission
+- **GREEN Phase**: Build question answer components and submission logic
+- **REFACTOR Phase**: Polish UI, validation, progress tracking
+
+#### **Handoff Instructions for Mid-Development Takeover:**
+
+**If taking over during development:**
+
+1. **Environment Check**: 
+   - Run `npm test -- --run` - ensure 603+ tests passing
+   - Run `npm run lint` and `npx tsc --noEmit` - no errors
+   - Start dev server: `npm run dev`
+
+2. **Current Progress Review**: 
+   - Check this section for latest status updates
+   - Review any completed test files to understand patterns
+   - Look at `/admin/invitations/page.tsx` for API integration examples
+
+3. **TDD Workflow**: 
+   - Always follow RED-GREEN-REFACTOR cycle
+   - Write failing tests first for any new feature
+   - Run full test suite after any file modification
+   - Update this PROJECT.md section after completing any milestone
+
+4. **API Testing**: 
+   - Test Questions API: `curl http://localhost:3000/api/questions`
+   - Test Assignments API: `curl http://localhost:3000/api/assignments`
+   - Use browser dev tools to inspect API responses
+
+5. **Database Schema Reference**: 
+   - Questions table: See `src/types/database.ts` lines 61-107
+   - Assignments table: See `src/types/database.ts` lines 108-137
+   - Submissions table: Check database types for current schema
+
+#### **Progress Tracking Template:**
+- ✅ **COMPLETED**: [Feature] - [Date] - [Test count: X passing]
+- ⚡ **IN PROGRESS**: [Feature] - [Current phase: RED/GREEN/REFACTOR]  
+- ⏳ **PENDING**: [Feature] - [Dependencies or blockers]
+- ❌ **BLOCKED**: [Feature] - [Issue description and resolution steps]
+
+#### **Auto-Save Implementation Plan:**
+```typescript
+// Auto-save pattern for draft submissions
+const autoSave = useCallback(async (answers: Record<string, string>) => {
+  try {
+    const response = await fetch('/api/submissions', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        assignment_id: assignmentId,
+        answers,
+        status: 'draft'
+      })
+    })
+    // Update UI to show "Saved at [timestamp]"
+    setLastSaved(new Date())
+  } catch (error) {
+    // Show "Failed to save" indicator
+    setAutoSaveError(true)
+  }
+}, [assignmentId])
+
+// Trigger auto-save every 30 seconds or on answer change
+useEffect(() => {
+  if (hasUnsavedChanges) {
+    const timer = setTimeout(() => autoSave(answers), 30000)
+    return () => clearTimeout(timer)
+  }
+}, [answers, hasUnsavedChanges, autoSave])
+```
+
+#### **Error Handling Strategy:**
+- **Network Failures**: Show retry buttons and offline indicators
+- **Authentication Issues**: Redirect to login with return URL
+- **Validation Errors**: Inline error messages with clear guidance
+- **Auto-save Failures**: Visual indicators and manual save options
 
 ### ✅ Phase 3 Step 1: Database & API Layer (COMPLETED)
 
