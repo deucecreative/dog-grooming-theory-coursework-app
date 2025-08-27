@@ -116,12 +116,12 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Insufficient permissions' }, { status: 403 })
     }
 
-    const { title, description, question_ids, due_date } = body
+    const { title, description, question_ids, due_date, course_id } = body
 
     // Validate required fields
-    if (!title || !description || !question_ids || !due_date) {
+    if (!title || !description || !question_ids || !due_date || !course_id) {
       return NextResponse.json(
-        { error: 'Missing required fields: title, description, question_ids, due_date' },
+        { error: 'Missing required fields: title, description, question_ids, due_date, course_id' },
         { status: 400 }
       )
     }
@@ -143,28 +143,41 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Verify all question IDs exist
-    const { data: existingQuestions, error: questionsError } = await supabase
-      .from('questions')
-      .select('id')
-      .in('id', question_ids)
+    // Helper function for ID validation (DRY principle)
+    const validateIds = async (table: string, ids: string | string[], fieldName: string) => {
+      const idArray = Array.isArray(ids) ? ids : [ids]
+      const { data: existing, error } = await supabase
+        .from(table)
+        .select('id')
+        .in('id', idArray)
 
-    if (questionsError) {
-      console.error('Database error:', questionsError)
-      return NextResponse.json(
-        { error: 'Failed to validate questions' },
-        { status: 500 }
-      )
+      if (error) {
+        console.error(`Database error validating ${fieldName}:`, error)
+        return { error: `Failed to validate ${fieldName}`, status: 500 }
+      }
+
+      const existingIds = existing?.map((item: { id: string }) => item.id) || []
+      const invalidIds = idArray.filter(id => !existingIds.includes(id))
+      
+      if (invalidIds.length > 0) {
+        return {
+          error: `One or more ${fieldName} are invalid: ${invalidIds.join(', ')}`,
+          status: 400
+        }
+      }
+      return null
     }
 
-    const existingQuestionIds = existingQuestions?.map(q => q.id) || []
-    const invalidQuestionIds = question_ids.filter(id => !existingQuestionIds.includes(id))
-    
-    if (invalidQuestionIds.length > 0) {
-      return NextResponse.json(
-        { error: `One or more question IDs are invalid: ${invalidQuestionIds.join(', ')}` },
-        { status: 400 }
-      )
+    // Validate question IDs exist
+    const questionValidation = await validateIds('questions', question_ids, 'question IDs')
+    if (questionValidation) {
+      return NextResponse.json({ error: questionValidation.error }, { status: questionValidation.status })
+    }
+
+    // Validate course_id exists
+    const courseValidation = await validateIds('courses', course_id, 'course_id')
+    if (courseValidation) {
+      return NextResponse.json({ error: courseValidation.error }, { status: courseValidation.status })
     }
 
     // Create assignment
@@ -173,6 +186,7 @@ export async function POST(request: NextRequest) {
       description: description.trim(),
       question_ids,
       due_date,
+      course_id,
       created_by: user.id
     }
 

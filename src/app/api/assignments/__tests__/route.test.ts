@@ -306,7 +306,8 @@ describe('Assignments API - POST /api/assignments', () => {
       title: 'New Assignment',
       description: 'Test assignment for API',
       question_ids: ['question-1', 'question-2'],
-      due_date: '2024-02-01T23:59:59.000Z'
+      due_date: '2024-02-01T23:59:59.000Z',
+      course_id: 'test-course-id'
     }
 
     const createdAssignment = {
@@ -324,6 +325,10 @@ describe('Assignments API - POST /api/assignments', () => {
       }))
       .mockReturnValueOnce(createMockQueryChain({
         data: mockQuestions, // Questions exist
+        error: null
+      }))
+      .mockReturnValueOnce(createMockQueryChain({
+        data: [{ id: 'test-course-id' }], // Course exists
         error: null
       }))
       .mockReturnValueOnce(createMockQueryChain({
@@ -354,7 +359,8 @@ describe('Assignments API - POST /api/assignments', () => {
       title: 'Course Leader Assignment',
       description: 'Assignment created by course leader',
       question_ids: ['question-1'],
-      due_date: '2024-03-01T23:59:59.000Z'
+      due_date: '2024-03-01T23:59:59.000Z',
+      course_id: 'test-course-id'
     }
 
     const createdAssignment = {
@@ -372,6 +378,10 @@ describe('Assignments API - POST /api/assignments', () => {
       }))
       .mockReturnValueOnce(createMockQueryChain({
         data: [mockQuestions[0]], // One question exists
+        error: null
+      }))
+      .mockReturnValueOnce(createMockQueryChain({
+        data: [{ id: 'test-course-id' }], // Course exists
         error: null
       }))
       .mockReturnValueOnce(createMockQueryChain({
@@ -467,7 +477,8 @@ describe('Assignments API - POST /api/assignments', () => {
       title: 'Empty Questions Assignment',
       description: 'This has no questions',
       question_ids: [],
-      due_date: '2024-02-01T23:59:59.000Z'
+      due_date: '2024-02-01T23:59:59.000Z',
+      course_id: 'test-course-id'
     }
 
     const request = new NextRequest('http://localhost:3000/api/assignments', {
@@ -493,7 +504,8 @@ describe('Assignments API - POST /api/assignments', () => {
       title: 'Invalid Questions Assignment',
       description: 'This references non-existent questions',
       question_ids: ['question-1', 'non-existent-question'],
-      due_date: '2024-02-01T23:59:59.000Z'
+      due_date: '2024-02-01T23:59:59.000Z',
+      course_id: 'test-course-id'
     }
 
     mockSupabaseClient.from
@@ -534,7 +546,8 @@ describe('Assignments API - POST /api/assignments', () => {
       title: 'Invalid Date Assignment',
       description: 'This has an invalid due date',
       question_ids: ['question-1'],
-      due_date: 'invalid-date-format'
+      due_date: 'invalid-date-format',
+      course_id: 'test-course-id'
     }
 
     const request = new NextRequest('http://localhost:3000/api/assignments', {
@@ -579,7 +592,8 @@ describe('Assignments API - POST /api/assignments', () => {
       title: 'Database Error Assignment',
       description: 'This will cause a database error',
       question_ids: ['question-1'],
-      due_date: '2024-02-01T23:59:59.000Z'
+      due_date: '2024-02-01T23:59:59.000Z',
+      course_id: 'test-course-id'
     }
 
     mockSupabaseClient.from
@@ -589,6 +603,10 @@ describe('Assignments API - POST /api/assignments', () => {
       }))
       .mockReturnValueOnce(createMockQueryChain({
         data: [mockQuestions[0]], // Questions exist
+        error: null
+      }))
+      .mockReturnValueOnce(createMockQueryChain({
+        data: [{ id: 'test-course-id' }], // Course exists
         error: null
       }))
       .mockReturnValueOnce(createMockQueryChain({
