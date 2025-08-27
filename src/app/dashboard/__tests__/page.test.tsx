@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen, waitFor, mockUser, mockProfile } from '@/test/utils'
+import '@testing-library/jest-dom'
 import DashboardPage from '../page'
 
 // Mock the useSupabase hook
@@ -13,9 +14,91 @@ vi.mock('@/hooks/use-supabase', () => ({
   })),
 }))
 
+// Mock fetch globally
+global.fetch = vi.fn()
+
 describe('DashboardPage', () => {
   beforeEach(() => {
     vi.clearAllMocks()
+    
+    // Mock API responses to return the expected test data
+    vi.mocked(global.fetch).mockImplementation(async (url) => {
+      if (url === '/api/assignments/active') {
+        return {
+          ok: true,
+          status: 200,
+          text: async () => JSON.stringify({
+            assignments: [
+              { id: '1', title: 'Assignment 1' },
+              { id: '2', title: 'Assignment 2' }, 
+              { id: '3', title: 'Assignment 3' }
+            ]
+          })
+        } as Response
+      }
+      if (url === '/api/assignments/completed') {
+        return {
+          ok: true,
+          status: 200,
+          text: async () => JSON.stringify({
+            assignments: Array.from({ length: 12 }, (_, i) => ({
+              id: `completed-${i}`,
+              score: 85 // This will create 85% average
+            }))
+          })
+        } as Response
+      }
+      if (url === '/api/assignments/pending-review') {
+        return {
+          ok: true,
+          status: 200,
+          text: async () => JSON.stringify({
+            assignments: [
+              { id: 'review-1', title: 'Review 1' },
+              { id: 'review-2', title: 'Review 2' }
+            ]
+          })
+        } as Response
+      }
+      if (url === '/api/assignments/recent') {
+        return {
+          ok: true,
+          status: 200,
+          text: async () => JSON.stringify({
+            assignments: [
+              { 
+                id: 'recent-1', 
+                title: 'Basic Grooming Theory - Module 1',
+                status: 'in_progress',
+                completed_questions: 3,
+                total_questions: 5,
+                progress_percentage: 60
+              },
+              { 
+                id: 'recent-2', 
+                title: 'Dog Breed Identification',
+                status: 'completed',
+                score: 92,
+                progress_percentage: 100
+              },
+              { 
+                id: 'recent-3', 
+                title: 'Safety Protocols',
+                status: 'not_started',
+                due_date: '2025-08-30',
+                progress_percentage: 0
+              }
+            ]
+          })
+        } as Response
+      }
+      // Return 404 for all other URLs
+      return {
+        ok: false,
+        status: 404,
+        text: async () => 'Not Found'
+      } as Response
+    })
   })
 
   it('renders the main dashboard heading', async () => {

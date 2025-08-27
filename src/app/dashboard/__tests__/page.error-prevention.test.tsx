@@ -102,12 +102,23 @@ describe('Dashboard Integration Tests - Error Prevention', () => {
       })
 
       // ARRANGE: Mock 500 error that returns HTML instead of JSON
-      vi.mocked(global.fetch).mockResolvedValueOnce({
-        ok: false,
-        status: 500,
-        statusText: 'Internal Server Error',
-        text: async () => 'Internal Server Error' // HTML error, not JSON
-      } as Response)
+      vi.mocked(global.fetch).mockImplementation(async (url) => {
+        if (url === '/api/users?status=pending') {
+          return {
+            ok: false,
+            status: 500,
+            statusText: 'Internal Server Error',
+            text: async () => 'Internal Server Error' // HTML error, not JSON
+          } as Response
+        }
+        // Mock other API calls to prevent errors
+        return {
+          ok: false,
+          status: 404,
+          statusText: 'Not Found',
+          text: async () => 'Not Found'
+        } as Response
+      })
 
       // ACT: Render dashboard
       render(<DashboardPage />)
@@ -133,12 +144,23 @@ describe('Dashboard Integration Tests - Error Prevention', () => {
       })
 
       // ARRANGE: Mock 401 unauthorized
-      vi.mocked(global.fetch).mockResolvedValueOnce({
-        ok: false,
-        status: 401,
-        statusText: 'Unauthorized',
-        text: async () => '{"error": "Unauthorized"}'
-      } as Response)
+      vi.mocked(global.fetch).mockImplementation(async (url) => {
+        if (url === '/api/users?status=pending') {
+          return {
+            ok: false,
+            status: 401,
+            statusText: 'Unauthorized',
+            text: async () => '{"error": "Unauthorized"}'
+          } as Response
+        }
+        // Mock other API calls to prevent errors
+        return {
+          ok: false,
+          status: 404,
+          statusText: 'Not Found',
+          text: async () => 'Not Found'
+        } as Response
+      })
 
       // ACT: Render dashboard
       render(<DashboardPage />)
@@ -158,12 +180,23 @@ describe('Dashboard Integration Tests - Error Prevention', () => {
       })
 
       // ARRANGE: Mock empty response that causes JSON.parse to fail
-      vi.mocked(global.fetch).mockResolvedValueOnce({
-        ok: true,
-        status: 200,
-        statusText: 'OK',
-        text: async () => '' // Empty response
-      } as Response)
+      vi.mocked(global.fetch).mockImplementation(async (url) => {
+        if (url === '/api/users?status=pending') {
+          return {
+            ok: true,
+            status: 200,
+            statusText: 'OK',
+            text: async () => '' // Empty response
+          } as Response
+        }
+        // Mock other API calls to prevent errors
+        return {
+          ok: false,
+          status: 404,
+          statusText: 'Not Found',
+          text: async () => 'Not Found'
+        } as Response
+      })
 
       // ACT: Render dashboard
       render(<DashboardPage />)
@@ -188,12 +221,23 @@ describe('Dashboard Integration Tests - Error Prevention', () => {
       })
 
       // ARRANGE: Mock malformed JSON that causes parse error
-      vi.mocked(global.fetch).mockResolvedValueOnce({
-        ok: true,
-        status: 200,
-        statusText: 'OK',
-        text: async () => '{"users": [invalid json'
-      } as Response)
+      vi.mocked(global.fetch).mockImplementation(async (url) => {
+        if (url === '/api/users?status=pending') {
+          return {
+            ok: true,
+            status: 200,
+            statusText: 'OK',
+            text: async () => '{"users": [invalid json'
+          } as Response
+        }
+        // Mock other API calls to prevent errors
+        return {
+          ok: false,
+          status: 404,
+          statusText: 'Not Found',
+          text: async () => 'Not Found'
+        } as Response
+      })
 
       // ACT: Render dashboard
       render(<DashboardPage />)
@@ -213,7 +257,18 @@ describe('Dashboard Integration Tests - Error Prevention', () => {
       })
 
       // ARRANGE: Mock network failure
-      vi.mocked(global.fetch).mockRejectedValueOnce(new Error('Network error'))
+      vi.mocked(global.fetch).mockImplementation(async (url) => {
+        if (url === '/api/users?status=pending') {
+          throw new Error('Network error')
+        }
+        // Mock other API calls to prevent errors  
+        return {
+          ok: false,
+          status: 404,
+          statusText: 'Not Found',
+          text: async () => 'Not Found'
+        } as Response
+      })
 
       // ACT: Render dashboard
       render(<DashboardPage />)
@@ -235,17 +290,42 @@ describe('Dashboard Integration Tests - Error Prevention', () => {
       })
 
       // ARRANGE: Mock successful API response
-      vi.mocked(global.fetch).mockResolvedValueOnce({
-        ok: true,
-        status: 200,
-        statusText: 'OK',
-        text: async () => JSON.stringify({
-          users: [
-            { id: 'user-1', email: 'pending1@test.com', status: 'pending' },
-            { id: 'user-2', email: 'pending2@test.com', status: 'pending' }
-          ]
-        })
-      } as Response)
+      vi.mocked(global.fetch).mockImplementation(async (url) => {
+        if (url === '/api/users?status=pending') {
+          return {
+            ok: true,
+            status: 200,
+            statusText: 'OK',
+            text: async () => JSON.stringify({
+              users: [
+                { id: 'user-1', email: 'pending1@test.com', status: 'pending' },
+                { id: 'user-2', email: 'pending2@test.com', status: 'pending' }
+              ]
+            })
+          } as Response
+        }
+        // Mock admin dashboard stats API call
+        if (url === '/api/admin/users/stats') {
+          return {
+            ok: true,
+            status: 200,
+            statusText: 'OK',
+            text: async () => JSON.stringify({
+              total_users: 127,
+              course_leaders: 12,
+              students: 114,
+              new_this_month: 8
+            })
+          } as Response
+        }
+        // Mock other API calls to prevent errors
+        return {
+          ok: false,
+          status: 404,
+          statusText: 'Not Found',
+          text: async () => 'Not Found'
+        } as Response
+      })
 
       // ACT: Render dashboard
       render(<DashboardPage />)
@@ -259,7 +339,7 @@ describe('Dashboard Integration Tests - Error Prevention', () => {
       })
     })
 
-    it('should_not_call_api_for_non_privileged_users', async () => {
+    it('should_call_student_apis_for_student_users', async () => {
       // ARRANGE: Student user (not admin/course_leader)
       vi.mocked(useSupabase).mockReturnValue({ 
         profile: {
@@ -272,11 +352,39 @@ describe('Dashboard Integration Tests - Error Prevention', () => {
         signOut: vi.fn()
       })
 
+      // ARRANGE: Mock student API responses
+      vi.mocked(global.fetch).mockImplementation(async (url) => {
+        // Student-specific API endpoints
+        if (url === '/api/assignments/active' || 
+            url === '/api/assignments/completed' || 
+            url === '/api/assignments/pending-review' ||
+            url === '/api/assignments/recent') {
+          return {
+            ok: true,
+            status: 200,
+            statusText: 'OK',
+            text: async () => JSON.stringify({ assignments: [] })
+          } as Response
+        }
+        // Mock other API calls
+        return {
+          ok: false,
+          status: 404,
+          statusText: 'Not Found',
+          text: async () => 'Not Found'
+        } as Response
+      })
+
       // ACT: Render dashboard
       render(<DashboardPage />)
 
-      // ASSERT: Should not call users API for students
-      expect(global.fetch).not.toHaveBeenCalled()
+      // ASSERT: Should call student assignment APIs
+      await waitFor(() => {
+        expect(global.fetch).toHaveBeenCalledWith('/api/assignments/active')
+        expect(global.fetch).toHaveBeenCalledWith('/api/assignments/completed') 
+        expect(global.fetch).toHaveBeenCalledWith('/api/assignments/pending-review')
+        expect(global.fetch).toHaveBeenCalledWith('/api/assignments/recent')
+      })
       
       // Should show student dashboard content
       expect(screen.getByText(/Welcome to your coursework management system/i)).toBeInTheDocument()
