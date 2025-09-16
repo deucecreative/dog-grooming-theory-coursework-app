@@ -219,12 +219,11 @@ describe('Invite Accept Page', () => {
     })
 
     it('should disable form during submission', async () => {
-      mockSupabaseClient.auth.signUp.mockImplementation(() => 
-        new Promise(resolve => setTimeout(() => resolve({
-          data: { user: { id: 'user' } },
-          error: null,
-        }), 100))
-      )
+      // Mock resolved promise instead of using setTimeout to avoid cleanup warnings
+      mockSupabaseClient.auth.signUp.mockResolvedValue({
+        data: { user: { id: 'user' } },
+        error: null,
+      })
 
       vi.mocked(fetch).mockResolvedValue({
         ok: true,
@@ -232,7 +231,7 @@ describe('Invite Accept Page', () => {
       } as Response)
 
       render(<InviteAcceptPage />)
-      
+
       await waitFor(() => {
         expect(screen.getByLabelText('Full Name')).toBeInTheDocument()
       })
@@ -249,6 +248,7 @@ describe('Invite Accept Page', () => {
 
       fireEvent.click(screen.getByText('Create account'))
 
+      // Check for loading state immediately after click
       expect(screen.getByText('Creating account...')).toBeInTheDocument()
       expect(screen.getByLabelText('Full Name')).toBeDisabled()
     })
@@ -299,18 +299,25 @@ describe('Invite Accept Page', () => {
     })
 
     it('should show loading while verifying invitation', async () => {
-      // Mock slow verification
-      vi.mocked(fetch).mockImplementation(() => 
-        new Promise(resolve => setTimeout(() => resolve({
-          ok: true,
-          json: async () => validInvitation,
-        } as Response), 100))
+      // Mock slow verification using pending promise approach
+      let resolvePromise: (value: Response) => void
+
+      vi.mocked(fetch).mockImplementation(() =>
+        new Promise<Response>(resolve => {
+          resolvePromise = resolve
+        })
       )
 
       render(<InviteAcceptPage />)
-      
+
       expect(screen.getByText('Verifying Invitation...')).toBeInTheDocument()
-      
+
+      // Resolve the promise after checking loading state
+      resolvePromise!({
+        ok: true,
+        json: async () => validInvitation,
+      } as Response)
+
       await waitFor(() => {
         expect(screen.getByText('Accept Invitation')).toBeInTheDocument()
       })

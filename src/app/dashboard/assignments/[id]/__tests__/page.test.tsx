@@ -2,6 +2,7 @@
 
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen, waitFor, fireEvent } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
 import { mockUser, mockProfile } from '@/test/utils'
 import '@testing-library/jest-dom'
 import AssignmentDetailPage from '../page'
@@ -187,45 +188,50 @@ describe('Assignment Detail Page - TDD Implementation', () => {
     })
 
     it('should_handle_short_text_input', async () => {
+      const user = userEvent.setup()
       render(<AssignmentDetailPage />)
-      
+
       await waitFor(() => {
         const textInput = screen.getByRole('textbox', { name: /safety first/i })
         expect(textInput).toBeInTheDocument()
       })
-      
+
       const textInput = screen.getByRole('textbox', { name: /safety first/i })
-      fireEvent.change(textInput, { target: { value: 'New safety answer' } })
-      
+      await user.clear(textInput)
+      await user.type(textInput, 'New safety answer')
+
       expect(textInput).toHaveValue('New safety answer')
     })
 
     it('should_handle_multiple_choice_selection', async () => {
+      const user = userEvent.setup()
       render(<AssignmentDetailPage />)
-      
+
       await waitFor(() => {
         const slickerBrushRadio = screen.getByRole('radio', { name: 'Slicker brush' })
         expect(slickerBrushRadio).toBeInTheDocument()
       })
-      
+
       const slickerBrushRadio = screen.getByRole('radio', { name: 'Slicker brush' })
-      fireEvent.click(slickerBrushRadio)
-      
+      await user.click(slickerBrushRadio)
+
       expect(slickerBrushRadio).toBeChecked()
     })
 
     it('should_handle_long_text_input_with_character_count', async () => {
+      const user = userEvent.setup()
       render(<AssignmentDetailPage />)
-      
+
       await waitFor(() => {
         const longTextArea = screen.getByRole('textbox', { name: /grooming process/i })
         expect(longTextArea).toBeInTheDocument()
       })
-      
+
       const longTextArea = screen.getByRole('textbox', { name: /grooming process/i })
       const longText = 'This is a detailed grooming process that includes multiple steps...'
-      fireEvent.change(longTextArea, { target: { value: longText } })
-      
+      await user.clear(longTextArea)
+      await user.type(longTextArea, longText)
+
       expect(longTextArea).toHaveValue(longText)
       // Should show character count
       expect(screen.getByText(/\d+ characters/)).toBeInTheDocument()

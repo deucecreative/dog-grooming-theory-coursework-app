@@ -151,20 +151,23 @@ describe('Database Types', () => {
       expect(validSubmission.answers).toEqual({ 'q1': 'Double coats have two layers...', 'q2': 'Brushing should be done...' })
     })
 
-    it('defines assessments table structure correctly', () => {
-      const validAssessment: Database['public']['Tables']['assessments']['Row'] = {
+    it('defines ai_assessments table structure correctly', () => {
+      const validAssessment: Database['public']['Tables']['ai_assessments']['Row'] = {
         id: '123e4567-e89b-12d3-a456-426614174004',
         submission_id: '123e4567-e89b-12d3-a456-426614174003',
-        question_id: '123e4567-e89b-12d3-a456-426614174001',
-        ai_score: 85,
-        ai_feedback: 'Good understanding shown...',
-        confidence_score: 0.85,
+        content_score: 85,
+        technical_accuracy: 90,
+        completeness: 80,
+        overall_score: 85,
+        feedback: 'Good understanding shown...',
+        suggestions: ['Provide more detail on technique', 'Include safety considerations'],
+        processed_at: '2023-01-01T00:00:00.000Z',
         created_at: '2023-01-01T00:00:00.000Z',
       }
 
-      expect(validAssessment.ai_score).toBe(85)
-      expect(validAssessment.confidence_score).toBe(0.85)
-      expect(validAssessment.ai_feedback).toBe('Good understanding shown...')
+      expect(validAssessment.overall_score).toBe(85)
+      expect(validAssessment.content_score).toBe(85)
+      expect(validAssessment.feedback).toBe('Good understanding shown...')
     })
 
     it('defines final_grades table structure correctly', () => {

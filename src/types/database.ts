@@ -172,32 +172,41 @@ export interface Database {
           updated_at?: string
         }
       }
-      assessments: {
+      ai_assessments: {
         Row: {
           id: string
           submission_id: string
-          question_id: string
-          ai_score: number
-          ai_feedback: string | null
-          confidence_score: number
+          content_score: number | null
+          technical_accuracy: number | null
+          completeness: number | null
+          overall_score: number | null
+          feedback: string | null
+          suggestions: Json | null
+          processed_at: string
           created_at: string
         }
         Insert: {
           id?: string
           submission_id: string
-          question_id: string
-          ai_score: number
-          ai_feedback?: string | null
-          confidence_score: number
+          content_score?: number | null
+          technical_accuracy?: number | null
+          completeness?: number | null
+          overall_score?: number | null
+          feedback?: string | null
+          suggestions?: Json | null
+          processed_at?: string
           created_at?: string
         }
         Update: {
           id?: string
           submission_id?: string
-          question_id?: string
-          ai_score?: number
-          ai_feedback?: string | null
-          confidence_score?: number
+          content_score?: number | null
+          technical_accuracy?: number | null
+          completeness?: number | null
+          overall_score?: number | null
+          feedback?: string | null
+          suggestions?: Json | null
+          processed_at?: string
           created_at?: string
         }
       }
@@ -407,4 +416,4 @@ export type Course = Database['public']['Tables']['courses']['Row']
 export type Question = Database['public']['Tables']['questions']['Row']
 export type Assignment = Database['public']['Tables']['assignments']['Row']
 export type Submission = Database['public']['Tables']['submissions']['Row']
-export type AIAssessment = Database['public']['Tables']['assessments']['Row']
+export type AIAssessment = Database['public']['Tables']['ai_assessments']['Row']
